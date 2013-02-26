@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>{@value STARTS_WITH_OPERATOR}
  * <li>{@value MATCHES_ANY_OPERATOR}
  * <li>{@value MATCHES_ALL_OPERATOR}
+ * <li>{@value MATCHES_FUZZY_OPERATOR}
  * </ul>
  */
 public class PredicateParser {
@@ -58,6 +59,7 @@ public class PredicateParser {
     public static final String STARTS_WITH_OPERATOR = "startswith";
     public static final String MATCHES_ANY_OPERATOR = "matchesany";
     public static final String MATCHES_ALL_OPERATOR = "matchesall";
+    public static final String MATCHES_FUZZY_OPERATOR = "matchesfuzzy";
 
     private final Map<String, String> compoundOperators; {
         Map<String, String> m = new ConcurrentHashMap<String, String>();
@@ -122,6 +124,9 @@ public class PredicateParser {
         m.put("matchesany", MATCHES_ANY_OPERATOR);
         m.put("matches", MATCHES_ANY_OPERATOR);
         m.put("~=", MATCHES_ANY_OPERATOR);
+        
+        m.put("MATCHES_FUZZY_OPERATOR", MATCHES_FUZZY_OPERATOR);
+        m.put("~", MATCHES_FUZZY_OPERATOR);
 
         m.put(MATCHES_ALL_OPERATOR, MATCHES_ALL_OPERATOR);
 
@@ -144,6 +149,7 @@ public class PredicateParser {
         m.put(STARTS_WITH_OPERATOR, new StartsWithEvaluator());
         m.put(MATCHES_ANY_OPERATOR, new MatchesAnyEvaluator());
         m.put(MATCHES_ALL_OPERATOR, new MatchesAllEvaluator());
+        m.put(MATCHES_FUZZY_OPERATOR, new MatchesFuzzyEvaluator());
 
         evaluators = m;
     }
@@ -633,7 +639,24 @@ public class PredicateParser {
         }
     }
 
-    private static class MatchesAllEvaluator extends ComparisonEvaluator {
+	private static class MatchesAllEvaluator extends ComparisonEvaluator {
+
+        @Override
+        protected boolean compare(State state, Object keyValue, List<Object> values) {
+            if (keyValue != null) {
+                String keyValueString = keyValue.toString().trim().toLowerCase(Locale.ENGLISH);
+                for (Object value : values) {
+                    if (value == null ||
+                            !keyValueString.contains(value.toString().trim().toLowerCase(Locale.ENGLISH))) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+	
+	private static class MatchesFuzzyEvaluator extends ComparisonEvaluator {
 
         @Override
         protected boolean compare(State state, Object keyValue, List<Object> values) {
