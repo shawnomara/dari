@@ -306,8 +306,9 @@ class SqlQuery {
 
             if (join.type == JoinType.INNER && join.equals(mysqlIndexHint)) {
                 fromBuilder.append(" /*! USE INDEX (k_name_value) */");
-
-            } else if (join.sqlIndex == SqlIndex.LOCATION &&
+            } else if(join.equals(mysqlIndexHint)){
+            	fromBuilder.append(" USE INDEX (PRIMARY)");
+            }else if (join.sqlIndex == SqlIndex.LOCATION &&
                     join.sqlIndexTable.getVersion() >= 2) {
                 fromBuilder.append(" /*! IGNORE INDEX (PRIMARY) */");
             }
