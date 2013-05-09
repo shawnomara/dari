@@ -41,6 +41,7 @@ class SqlQuery {
     private final Map<Query<?>, SqlQuery> subSqlQueries = new HashMap<Query<?>, SqlQuery>();
 
     private boolean needsDistinct;
+    private boolean disableDistinct = false;
     private Join mysqlIndexHint;
     private boolean forceLeftJoins;
 
@@ -63,6 +64,11 @@ class SqlQuery {
         recordInRowIndexField = aliasedField("r", SqlDatabase.IN_ROW_INDEX_COLUMN);
         mappedKeys = query.mapEmbeddedKeys(database.getEnvironment());
         selectedIndexes = new HashMap<String, ObjectIndex>();
+        
+        Boolean disableDistinct = Boolean.parseBoolean((String) query.getOptions().get(SqlDatabase.OVERRIDE_DISTINCT));
+        if(disableDistinct != null && disableDistinct == true){
+        	this.disableDistinct = true;
+        }
 
         for (Map.Entry<String, Query.MappedKey> entry : mappedKeys.entrySet()) {
             selectIndex(entry.getKey(), entry.getValue());
@@ -306,6 +312,7 @@ class SqlQuery {
 
             if (join.type == JoinType.INNER && join.equals(mysqlIndexHint)) {
                 fromBuilder.append(" /*! USE INDEX (k_name_value) */");
+
             } else if(join.equals(mysqlIndexHint)){
             	fromBuilder.append(" USE INDEX (PRIMARY)");
             }else if (join.sqlIndex == SqlIndex.LOCATION &&
@@ -731,7 +738,7 @@ class SqlQuery {
                     whereBuilder.append(joinValueField);
                     whereBuilder.append(" IS NOT NULL AND ");
 
-                    if (subClauseCount > 1) {
+                    if (subClauseCount > 1 && !disableDistinct) {
                         needsDistinct = true;
                         whereBuilder.append("(");
                         comparisonBuilder.append(")");

@@ -95,6 +95,7 @@ public class SqlDatabase extends AbstractDatabase<Connection> {
     public static final String RETURN_ORIGINAL_DATA_QUERY_OPTION = "sql.returnOriginalData";
     public static final String USE_JDBC_FETCH_SIZE_QUERY_OPTION = "sql.useJdbcFetchSize";
     public static final String USE_READ_DATA_SOURCE_QUERY_OPTION = "sql.useReadDataSource";
+    public static final String OVERRIDE_DISTINCT = "sql.disableDistinct";
     public static final String SKIP_INDEX_STATE_EXTRA = "sql.skipIndex";
 
     public static final String INDEX_TABLE_INDEX_OPTION = "sql.indexTable";
